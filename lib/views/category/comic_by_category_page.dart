@@ -20,13 +20,11 @@ class _ComicByCategoryPageState extends State<ComicByCategoryPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final arguments = Get.arguments;
-      slug = arguments['category-slug'] ?? '';
-      name = arguments['category-name'] ?? '';
-      print('ComicByCategoryPage: name $name');
-      controller.fetchComicByCategory(controller.currentPage.value, slug);
-    });
+    final arguments = Get.arguments;
+    slug = arguments['category-slug'] ?? '';
+    name = arguments['category-name'] ?? '';
+    print('ComicByCategoryPage: name $name');
+    controller.fetchComicByCategory(controller.currentPage.value, slug);
   }
 
   @override

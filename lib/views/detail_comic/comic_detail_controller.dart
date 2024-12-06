@@ -11,6 +11,7 @@ class ComicDetailController extends GetxController {
   ComicModel? comicModel;
   String? selectedServer;
   var isLoading = false.obs;
+  var comicName = ''.obs;
   TextEditingController searchChapterController = TextEditingController();
 
   /// Phương thức lấy thông tin chi tiết của truyện từ API
@@ -24,10 +25,11 @@ class ComicDetailController extends GetxController {
       if (data['status'] == 'success') {
         final comic = ComicModel.fromJson(data['data']['item']);
         comicModel = comic;
+        comicName.value = comic.name;
         // Mặc định chọn server đầu tiên nếu có chapters
         if (comic.chapters?.isNotEmpty == true) {
           selectedServer = comic.chapters![0].serverName;
-          print('Default server: $selectedServer');
+          // print('Default server: $selectedServer');
         }
         return comic;
       } else {
@@ -36,7 +38,6 @@ class ComicDetailController extends GetxController {
     } catch (e) {
       // Hiển thị thông báo lỗi
       // Get.snackbar('Error', 'Failed to fetch comic: $e');
-      print('Error! Failed to fetch comic: $e');
       return null;
     } finally {
       isLoading.value = false; // Kết thúc loading
@@ -47,7 +48,7 @@ class ComicDetailController extends GetxController {
   void updateSelectedServer(String serverName) {
     selectedServer = serverName;
     update(); // Cập nhật trạng thái để giao diện thay đổi
-    print('Selected server updated to: $serverName');
+    // print('Selected server updated to: $serverName');
   }
 
   /// Hàm lấy trạng thái của truyện

@@ -22,6 +22,7 @@ class _DrawerMenuPageState extends State<DrawerMenuPage> {
   List<ScreenHiddenDrawer> _pages = [];
   final mTextStyle = const TextStyle(
       fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white);
+
   @override
   void initState() {
     // TODO: implement initState

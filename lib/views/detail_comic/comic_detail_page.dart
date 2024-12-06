@@ -17,56 +17,125 @@ class _ComicDetailPageState extends State<ComicDetailPage> {
   final imageBaseUrl = 'https://img.otruyenapi.com/uploads/comics/';
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    // TODO: implement initState
+    super.initState();
     final arguments = Get.arguments;
     final slug = arguments['slug'] ?? '';
     final name = arguments['name'] ?? '';
     controller.fetchDetailComic(slug);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     print("Rebuild");
+    var orientation = MediaQuery.of(context).orientation;
+    if (orientation == Orientation.portrait) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Obx(() {
+            return Text(controller.comicName.value);
+          }),
+        ),
+        body: Obx(() {
+          if (controller.isLoading.value) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (controller.comicModel != null) {
+            final comic = controller.comicModel!;
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildImage(comic.thumbUrl),
+                  const SizedBox(height: 8),
+                  _buildTitleAndAuthor(comic.name, comic.author.toString()),
+                  const SizedBox(height: 8),
+                  _buildStatus(comic.status),
+                  const SizedBox(height: 16),
+                  _buildDescription(comic.content),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Chọn server',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildSelectServerButtons(comic),
+                  const SizedBox(height: 8),
+                  _buildChaptersSection(),
+                  const SizedBox(height: 8),
+                  _buildChapterList(comic),
+                ],
+              ),
+            );
+          }
+
+          return const Center(child: Text('Failed to load comic details.'));
+        }),
+      );
+    } else {
+      return Scaffold(
+        // appBar: AppBar(
+        //   title: Obx(() {
+        //     return Text(controller.comicName.value);
+        //   }),
+        // ),
+        body: Obx(() {
+          if (controller.isLoading.value) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (controller.comicModel != null) {
+            final comic = controller.comicModel!;
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      _buildImageLandscape(comic.thumbUrl),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                          children: [
+                            _buildTitleAndAuthor(
+                                comic.name, comic.author.toString()),
+                            const SizedBox(height: 8),
+                            _buildStatus(comic.status),
+                            const SizedBox(height: 16),
+                            _buildDescriptionLandscape(comic.content),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Chọn server',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildSelectServerButtons(comic),
+                  const SizedBox(height: 8),
+                  _buildChaptersSection(),
+                  const SizedBox(height: 8),
+                  _buildChapterList(comic),
+                ],
+              ),
+            );
+          }
+
+          return const Center(child: Text('Failed to load comic details.'));
+        }),
+      );
+    }
     // Kiểm tra giá trị của slug để đảm bảo nó hợp lệ
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(name),
-      ),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (controller.comicModel != null) {
-          final comic = controller.comicModel!;
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildImage(comic.thumbUrl),
-                const SizedBox(height: 8),
-                _buildTitleAndAuthor(comic.name, comic.author.toString()),
-                const SizedBox(height: 8),
-                _buildStatus(comic.status),
-                const SizedBox(height: 16),
-                _buildDescription(comic.content),
-                const SizedBox(height: 16),
-                const Text(
-                  'Chọn server',
-                  style: TextStyle(fontSize: 14),
-                ),
-                const SizedBox(height: 8),
-                _buildSelectServerButtons(comic),
-                const SizedBox(height: 8),
-                _buildChaptersSection(),
-                const SizedBox(height: 8),
-                _buildChapterList(comic),
-              ],
-            ),
-          );
-        }
-
-        return const Center(child: Text('Failed to load comic details.'));
-      }),
-    );
   }
 
   Widget _buildImage(String thumbUrl) {
@@ -75,6 +144,15 @@ class _ComicDetailPageState extends State<ComicDetailPage> {
       fit: BoxFit.cover,
       width: MediaQuery.of(context).size.width / 2,
       height: MediaQuery.of(context).size.height / 2.7,
+    );
+  }
+
+  Widget _buildImageLandscape(String thumbUrl) {
+    return Image.network(
+      '$imageBaseUrl$thumbUrl',
+      fit: BoxFit.cover,
+      width: MediaQuery.of(context).size.width / 4,
+      height: MediaQuery.of(context).size.height / 1.2,
     );
   }
 
@@ -100,6 +178,18 @@ class _ComicDetailPageState extends State<ComicDetailPage> {
 
   Widget _buildStatus(String status) {
     return Text('Trạng thái: ${controller.getStatusText(status)}');
+  }
+
+  Widget _buildDescriptionLandscape(String description) {
+    final plainText = controller.stripHtmlTags(description);
+
+    return SizedBox(
+      width: MediaQuery.of(context).size.width / 2,
+      child: Text(
+        plainText, // Description of the comic
+        style: const TextStyle(fontSize: 14),
+      ),
+    );
   }
 
   Widget _buildDescription(String description) {

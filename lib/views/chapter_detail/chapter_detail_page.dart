@@ -45,50 +45,104 @@ class _ChapterDetailPageState extends State<ChapterDetailPage> {
   }
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final arguments = Get.arguments;
     final chapterName = arguments['chapterName'] ?? '';
     print("arguments: $arguments");
+    var orientation = MediaQuery.of(context).orientation;
+    print("Orientation: $orientation");
+    if (orientation == Orientation.portrait) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Obx(() {
+            return Text('Chapter ${controller.chapterName.value}');
+          }),
+        ),
+        body: Obx(() {
+          if (controller.isLoading.value) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Obx(() {
-          // Hiển thị tên chương hiện tại dựa trên giá trị trong controller
-          return Text('Chapter ${controller.chapterName.value}');
+          if (controller.errorMessage.value.isNotEmpty) {
+            return Center(child: Text(controller.errorMessage.value));
+          }
+
+          if (controller.listImage.isEmpty) {
+            return const Center(child: Text('Không có dữ liệu hình ảnh.'));
+          }
+
+          return ListView.builder(
+            itemCount: controller.listImage.length,
+            itemBuilder: (context, index) {
+              final item = controller.listImage[index];
+              final imageUrl =
+                  '${controller.domainCdn.value}/${controller.chapterPath.value}/${item['image_file']}';
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: InteractiveViewer(
+                  maxScale: 5.0,
+                  minScale: 0.01,
+                  child: Image.network(
+                    imageUrl,
+                    width: MediaQuery.of(context).size.width,
+                    fit: BoxFit.fill,
+                  ),
+                ),
+              );
+            },
+          );
         }),
-      ),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
-        }
+        floatingActionButton: _buildFloatingActionButton(),
+      );
+    } else {
+      return Scaffold(
+        body: Obx(() {
+          if (controller.isLoading.value) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-        if (controller.errorMessage.value.isNotEmpty) {
-          return Center(child: Text(controller.errorMessage.value));
-        }
+          if (controller.errorMessage.value.isNotEmpty) {
+            return Center(child: Text(controller.errorMessage.value));
+          }
 
-        if (controller.listImage.isEmpty) {
-          return const Center(child: Text('Không có dữ liệu hình ảnh.'));
-        }
+          if (controller.listImage.isEmpty) {
+            return const Center(child: Text('Không có dữ liệu hình ảnh.'));
+          }
 
-        return ListView.builder(
-          itemCount: controller.listImage.length,
-          itemBuilder: (context, index) {
-            final item = controller.listImage[index];
-            final imageUrl =
-                '${controller.domainCdn.value}/${controller.chapterPath.value}/${item['image_file']}';
-            return Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Image.network(
-                imageUrl,
-                width: MediaQuery.of(context).size.width,
-                fit: BoxFit.fill,
+          return Stack(
+            children: [
+              ListView.builder(
+                itemCount: controller.listImage.length,
+                itemBuilder: (context, index) {
+                  final item = controller.listImage[index];
+                  final imageUrl =
+                      '${controller.domainCdn.value}/${controller.chapterPath.value}/${item['image_file']}';
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: InteractiveViewer(
+                      maxScale: 5.0,
+                      minScale: 0.01,
+                      child: Image.network(
+                        imageUrl,
+                        width: MediaQuery.of(context).size.width,
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                  );
+                },
               ),
-            );
-          },
-        );
-      }),
-      floatingActionButton: _buildFloatingActionButton(),
-    );
+              _buildFloatingActionButtonLandscape(),
+            ],
+          );
+        }),
+      );
+    }
   }
 
   Widget _buildFloatingActionButton() {
@@ -113,15 +167,14 @@ class _ChapterDetailPageState extends State<ChapterDetailPage> {
                 style: TextStyle(fontSize: 16, color: Colors.amber[800]),
               ),
             ),
-            TextButton(
-              onPressed: () {
-                _showChaptersBottomSheet();
-              },
-              child: Text(
-                "Select Chapter",
+            TextButton(onPressed: () {
+              _showChaptersBottomSheet();
+            }, child: Obx(() {
+              return Text(
+                "Chapter ${controller.chapterName.value}",
                 style: TextStyle(fontSize: 18, color: Colors.amber[800]),
-              ),
-            ),
+              );
+            })),
             TextButton(
               onPressed: () {
                 // Gọi hàm chuyển sang chương tiếp theo
@@ -138,6 +191,64 @@ class _ChapterDetailPageState extends State<ChapterDetailPage> {
     );
   }
 
+  Widget _buildFloatingActionButtonLandscape() {
+    return Align(
+      alignment: Alignment.centerRight, // Căn bên phải màn hình
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Container(
+          height: MediaQuery.of(context).size.height / 2, // Tăng chiều cao nút
+          width: 80, // Chiều rộng cố định
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.7),
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    // Gọi hàm chuyển về chương trước
+                    controller.moveToPrevious();
+                  },
+                  child: Text(
+                    "Previous",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: Colors.amber[800]),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    _showChaptersBottomSheet();
+                  },
+                  child: Obx(() {
+                    return Text(
+                      "Chapter\n${controller.chapterName.value}",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 14, color: Colors.amber[800]),
+                    );
+                  }),
+                ),
+                TextButton(
+                  onPressed: () {
+                    // Gọi hàm chuyển sang chương tiếp theo
+                    controller.moveToNext();
+                  },
+                  child: Text(
+                    "Next",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: Colors.amber[800]),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showChaptersBottomSheet() {
     final controller = Get.find<ChapterDetailController>();
 
@@ -148,15 +259,31 @@ class _ChapterDetailPageState extends State<ChapterDetailPage> {
 
     // Đồng bộ filteredChapters với chapters trước khi hiển thị
     controller.filteredChapters.assignAll(controller.chapters);
-    var reversedFilteredChapters =
-        controller.filteredChapters.reversed.toList();
+
     Get.bottomSheet(
       SafeArea(
         child: Container(
-          height: MediaQuery.of(context).size.height / 1.5,
+          height: MediaQuery.of(context).size.height / 1.3,
           color: Colors.black54,
           child: Column(
             children: [
+              // Padding(
+              //   padding: const EdgeInsets.all(16.0),
+              //   child: Row(
+              //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //     children: [
+              //       const Text(
+              //         'Danh sách chương',
+              //         style:
+              //             TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              //       ),
+              //       IconButton(
+              //         onPressed: () => Get.back(), // Đóng bottom sheet
+              //         icon: const Icon(Icons.close),
+              //       ),
+              //     ],
+              //   ),
+              // ),
               // Ô tìm kiếm
               Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -164,7 +291,7 @@ class _ChapterDetailPageState extends State<ChapterDetailPage> {
                   controller: controller.searchController,
                   onChanged: controller.searchChapter,
                   decoration: InputDecoration(
-                    hintText: 'Tìm chương...',
+                    hintText: 'Search chapter...',
                     hintStyle: const TextStyle(color: Colors.white70),
                     filled: true,
                     fillColor: Colors.white24,
@@ -191,7 +318,7 @@ class _ChapterDetailPageState extends State<ChapterDetailPage> {
                   }
 
                   return ListView.builder(
-                    itemCount: reversedFilteredChapters.length,
+                    itemCount: controller.filteredChapters.length,
                     itemBuilder: (context, index) {
                       final chapter = filteredChapters[index];
                       return ListTile(
